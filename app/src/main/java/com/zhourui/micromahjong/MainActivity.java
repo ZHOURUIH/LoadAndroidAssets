@@ -5,8 +5,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import com.unity3d.player.*;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.nio.channels.AsynchronousFileChannel;
 
 public class MainActivity extends UnityPlayerActivity {
@@ -20,10 +23,86 @@ public class MainActivity extends UnityPlayerActivity {
     {
         return a + b;
     }
-    private byte[] readTextBytes(InputStream inputStream, int length)
+    //读取assetbund并且返回字节数组
+    public byte[] loadAsset(String path)
+    {
+        try
+        {
+            InputStream inputStream = mAssetManager.open(path);
+            if(inputStream == null)
+            {
+                unityError("can not open file : " + path);
+                return null;
+            }
+            long length = mAssetManager.openFd(path).getLength();
+            return streamToBytes(inputStream, (int)length);
+        }
+        catch (IOException e)
+        {
+            unityLog(e.getMessage());
+            return null;
+        }
+    }
+    public String loadTxtAsset(String path)
+    {
+        try
+        {
+            byte[] buffer = loadAsset(path);
+            String str = new String(buffer, "UTF-8");
+            return str;
+        }
+        catch (UnsupportedEncodingException e)
+        {
+            e.printStackTrace();
+        }
+        return "";
+    }
+    public String loadTxtFile(String path)
+    {
+        byte[] buffer = loadFile(path);
+        try
+        {
+            String str = new String(buffer, "UTF-8");
+            return str;
+        }
+        catch (UnsupportedEncodingException e)
+        {
+            e.printStackTrace();
+        }
+        return "";
+    }
+    public byte[] loadFile(String path)
+    {
+        unityError(path);
+        File file = new File(path);
+        if(!file.exists())
+        {
+            return null;
+        }
+        try
+        {
+            FileInputStream fileStream = new FileInputStream(file);
+            int fileSize = fileStream.available();
+            return streamToBytes(fileStream, fileSize);
+        } catch (IOException e)
+        {
+            unityError("load file error : " + e.getMessage());
+            return null;
+        }
+    }
+    public void unityLog(String info)
+    {
+        UnityPlayer.UnitySendMessage("UnityLog", "log", info);
+    }
+    public void unityError(String info)
+    {
+        UnityPlayer.UnitySendMessage("UnityLog", "logError", info);
+    }
+    //------------------------------------------------------------------------------------------------------------------------------------------------------
+    private byte[] streamToBytes(InputStream inputStream, int length)
     {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        byte buf[] = new byte [length];
+        byte buf[] = new byte[length];
         try
         {
             int len;
@@ -39,29 +118,5 @@ public class MainActivity extends UnityPlayerActivity {
             unityLog(e.getMessage());
         }
         return outputStream.toByteArray();
-    }
-    //读取assetbund并且返回字节数组
-    public byte[] loadAB(String path)
-    {
-        InputStream inputStream = null;
-        long length = 0;
-        try
-        {
-            inputStream = mAssetManager.open(path);
-            length = mAssetManager.openFd(path).getLength();
-        }
-        catch (IOException e)
-        {
-            unityLog(e.getMessage());
-        }
-        return readTextBytes(inputStream, (int)length);
-    }
-    public void unityLog(String info)
-    {
-        UnityPlayer.UnitySendMessage("UnityLog", "log", info);
-    }
-    public void unityError(String info)
-    {
-        UnityPlayer.UnitySendMessage("UnityLog", "logError", info);
     }
 }

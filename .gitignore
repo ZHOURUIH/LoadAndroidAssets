@@ -5,3 +5,8 @@
 /captures
 .externalNativeBuild
 /app/build
+/local.properties
+/.gradle
+/.idea/misc.xml
+/.idea/modules.xml
+/.idea/workspace.xml

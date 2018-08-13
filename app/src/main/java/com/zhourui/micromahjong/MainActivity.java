@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.channels.AsynchronousFileChannel;
+import java.util.List;
 
 public class MainActivity extends UnityPlayerActivity {
     AssetManager mAssetManager;
@@ -18,10 +19,6 @@ public class MainActivity extends UnityPlayerActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mAssetManager = getAssets();
-    }
-    public int add(int a, int b)
-    {
-        return a + b;
     }
     //读取assetbund并且返回字节数组
     public byte[] loadAsset(String path)
@@ -90,6 +87,85 @@ public class MainActivity extends UnityPlayerActivity {
             return null;
         }
     }
+    public boolean isDirExist(String path)
+    {
+        File dir = new File(path);
+        if(!dir.isDirectory())
+        {
+            return false;
+        }
+        return dir.exists();
+    }
+    public boolean isFileExist(String path)
+    {
+        File dir = new File(path);
+        if(!dir.isFile())
+        {
+            return false;
+        }
+        return dir.exists();
+    }
+    public int getFileSize(String path)
+    {
+        File file = new File(path);
+        if(!file.isFile())
+        {
+            return 0;
+        }
+        try
+        {
+            FileInputStream fileStream = new FileInputStream(file);
+            return fileStream.available();
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+    public void findFiles(String path, List<String> fileList, List<String> patterns, boolean recursive)
+    {
+        File folder = new File(path);
+        if(!path.endsWith("/"))
+        {
+            path += "/";
+        }
+        File[] fileInfoList = folder.listFiles();
+        int fileCount = fileInfoList.length;
+        int patternCount = patterns != null ? patterns.size() : 0;
+        for (int i = 0; i < fileCount; ++i)
+        {
+            File file = fileInfoList[i];
+            String fileName = file.getName();
+            if(file.isFile())
+            {
+                // 如果需要过滤后缀名,则判断后缀
+                if (patternCount > 0)
+                {
+                    for (int j = 0; j < patternCount; ++j)
+                    {
+                        if (endsWith(fileName, patterns.get(j), false))
+                        {
+                            fileList.add(path + fileName);
+                        }
+                    }
+                }
+                // 不需要过滤,则直接放入列表
+                else
+                {
+                    fileList.add(path + fileName);
+                }
+            }
+            else if(file.isDirectory())
+            {
+                // 查找所有子目录
+                if (recursive)
+                {
+                    findFiles(path + fileName, fileList, patterns, recursive);
+                }
+            }
+        }
+    }
     public void unityLog(String info)
     {
         UnityPlayer.UnitySendMessage("UnityLog", "log", info);
@@ -118,5 +194,17 @@ public class MainActivity extends UnityPlayerActivity {
             unityLog(e.getMessage());
         }
         return outputStream.toByteArray();
+    }
+    protected boolean endsWith(String str, String pattern, boolean caseSensitive)
+    {
+        if(caseSensitive)
+        {
+            String newStr = str.toLowerCase();
+            return newStr.endsWith(pattern.toLowerCase());
+        }
+        else
+        {
+            return str.endsWith(pattern);
+        }
     }
 }

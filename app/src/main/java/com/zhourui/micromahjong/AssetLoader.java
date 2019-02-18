@@ -124,6 +124,7 @@ public class AssetLoader
     {
         return Utility.nextFile(fileList, index);
     }
+    public static void deleteFile(String path){Utility.deleteFile(path);}
     public static void createDirectory(String path)
     {
         Utility.createDirectory(path);

@@ -76,13 +76,9 @@ public class Utility
         {
             createFile(path);
             File file = new File(path);
-            FileInputStream fileStream = new FileInputStream(file);
-            int fileSize = fileStream.available();
-            FileOutputStream outputStream = new FileOutputStream(file);
-            int offset = appendData ? fileSize : 0;
-            outputStream.write(buffer, offset, writeCount);
+            FileOutputStream outputStream = new FileOutputStream(file, appendData);
+            outputStream.write(buffer, 0, writeCount);
             outputStream.close();
-            fileStream.close();
         }
         catch (IOException e)
         {
@@ -101,6 +97,22 @@ public class Utility
             unityError("writeTxtFile exception : " + path + ", message:" + e.getMessage() + ", stack:" + e.getStackTrace());
         }
     }
+    public  static void deleteFile(String path)
+    {
+        if(!isFileExist(path))
+        {
+            return;
+        }
+        try
+        {
+            File file = new File(path);
+            file.delete();
+        }
+        catch (Exception e)
+        {
+            unityError("deleteFile exception : " + path + ", message:" + e.getMessage() + ", stack:" + e.getStackTrace());
+        }
+    }
     public static void createFile(String path)
     {
         if(isFileExist(path))
@@ -110,7 +122,11 @@ public class Utility
         try
         {
             File file = new File(path);
-            file.createNewFile();
+            boolean ret = file.createNewFile();
+            if(!ret)
+            {
+                unityError("create file failed! path:" + path);
+            }
         }
         catch (IOException e)
         {
@@ -174,7 +190,11 @@ public class Utility
         File file = new File(path);
         if(!file.exists())
         {
-            file.mkdir();
+            boolean ret = file.mkdir();
+            if(!ret)
+            {
+                unityError("createDirectory failed : " + path);
+            }
         }
     }
     public static byte[] streamToBytes(InputStream inputStream, int length)
